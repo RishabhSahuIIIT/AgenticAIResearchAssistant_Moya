@@ -1,0 +1,34 @@
+{
+  "model": {
+    "name": "llama3.1",
+    "temperature": 0.3,
+    "seed": 42,
+    "max_tokens": 2000
+  },
+  "paper_sources": {
+    "arxiv_base": "https://arxiv.org/",
+    "default_topic": "software testing",
+    "num_papers": 5
+  },
+  "output": {
+    "trace_file": "trace.jsonl",
+    "summaries_dir": "summaries",
+    "storage_file": "papers_db.json",
+    "survey_file": "mini_survey.md"
+  },
+  "survey": {
+    "max_words": 800,
+    "include_citations": true
+  },
+  "parsing": {
+    "preferred_parser": "pymupdf",
+    "fallback_parsers": ["pdfplumber", "PyPDF2"],
+    "save_parsed": true,
+    "max_text_length": 15000
+  },
+  "comparison": {
+    "default_temperatures": [0.1, 0.3, 0.5, 0.7],
+    "default_seeds": [42, 123, 456],
+    "metrics": ["word_count", "citation_count", "avg_summary_length"]
+  }
+}

@@ -1,0 +1,33 @@
+# Core MOYA Framework (Required by assignment)
+moya-ai>=0.1.0
+
+# PDF Parsing Libraries (Multiple options for robustness)
+pymupdf>=1.23.0
+pdfplumber>=0.10.0
+PyPDF2>=3.0.0
+
+# LLM Integration
+ollama>=0.1.0
+
+# Web Interface
+streamlit>=1.28.0
+flask>=2.3.0
+
+# Data Processing & Analysis
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Utilities
+python-dotenv>=1.0.0
+requests>=2.31.0
+
+# JSON Schema Validation
+jsonschema>=4.19.0
+
+# Logging and Monitoring
+colorama>=0.4.6
+tqdm>=4.66.0
+
+# Testing (optional but recommended)
+pytest>=7.4.0
+pytest-cov>=4.1.0
