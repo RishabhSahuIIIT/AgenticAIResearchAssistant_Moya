@@ -1,12 +1,12 @@
 """
-Research Co-pilot - Interactive Version (FIXED)
+Research Co-pilot - Interactive Version (COMPLETE WITH TIMESTAMPS)
 Features:
-- LLM responses stored in trace
+- LLM responses stored in trace with smart file storage
 - Parameter comparison tool
 - Terminal-based interface
-- Web app support
-- Fixed PDF parsing with fallback
-- Auto-create config if missing
+- Timestamps in all generated files
+- Execution summary report
+- Progress tracking
 """
 
 import json
@@ -23,12 +23,20 @@ logger = logging.getLogger(__name__)
 
 
 class TraceLogger:
-    """Enhanced trace logger with LLM response storage"""
+    """Enhanced trace logger with smart LLM response storage"""
     
-    def __init__(self, trace_file: str):
+    def __init__(self, trace_file: str, response_dir: str = "llm_responses"):
         self.trace_file = trace_file
+        self.response_dir = Path(response_dir)
+        
+        # Ensure directory exists
+        self.response_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Clear/create trace file
         with open(trace_file, 'w') as f:
             f.write("")
+        
+        logger.info(f"LLM response directory: {self.response_dir}")
     
     def log(self, agent_name: str, action: str, data: Dict[str, Any]):
         """Log action with timestamp"""
@@ -45,10 +53,16 @@ class TraceLogger:
         logger.info(f"[{agent_name}] {action}")
     
     def log_llm_interaction(self, agent_name: str, prompt: str, response: str, 
-                           model: str, temperature: float, seed: int):
-        """Log complete LLM interaction"""
+                           model: str, temperature: float, seed: int,
+                           response_threshold: int = 500):
+        """Log LLM interaction with smart storage"""
+        timestamp = datetime.now()
+        prompt_hash = hashlib.md5(prompt.encode()).hexdigest()[:8]
+        
+        store_inline = len(response) <= response_threshold
+        
         entry = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": timestamp.isoformat(),
             "agent": agent_name,
             "action": "llm_interaction",
             "data": {
@@ -57,19 +71,39 @@ class TraceLogger:
                 "seed": seed,
                 "prompt_length": len(prompt),
                 "response_length": len(response),
-                "prompt_hash": hashlib.md5(prompt.encode()).hexdigest(),
-                "prompt": prompt[:500] + "..." if len(prompt) > 500 else prompt,
-                "response": response,
-                "response_preview": response[:200] + "..." if len(response) > 200 else response
+                "prompt_hash": prompt_hash,
+                "prompt": prompt[:200] + "..." if len(prompt) > 200 else prompt,
+                "response_storage": "inline" if store_inline else "file",
             }
         }
+        
+        if store_inline:
+            entry["data"]["response"] = response
+            entry["data"]["response_preview"] = response[:200] + "..." if len(response) > 200 else response
+        else:
+            response_filename = f"{agent_name}_{timestamp.strftime('%Y%m%d_%H%M%S')}_{prompt_hash}.txt"
+            response_path = self.response_dir / response_filename
+            
+            with open(response_path, 'w', encoding='utf-8') as f:
+                f.write(f"Agent: {agent_name}\n")
+                f.write(f"Timestamp: {timestamp.isoformat()}\n")
+                f.write(f"Model: {model}\n")
+                f.write(f"Temperature: {temperature}\n")
+                f.write(f"Seed: {seed}\n")
+                f.write(f"{'='*80}\n\n")
+                f.write(f"PROMPT:\n{prompt}\n\n")
+                f.write(f"{'='*80}\n\n")
+                f.write(f"RESPONSE:\n{response}\n")
+            
+            entry["data"]["response_file"] = str(response_path)
+            entry["data"]["response_preview"] = response[:200] + "..." if len(response) > 200 else response
         
         with open(self.trace_file, 'a', encoding='utf-8') as f:
             f.write(json.dumps(entry, ensure_ascii=False) + '\n')
 
 
 class PDFParser:
-    """Enhanced PDF parser with fallback mechanism"""
+    """Enhanced PDF parser with timestamps"""
     
     def __init__(self, trace_logger: TraceLogger, save_parsed: bool = True):
         self.trace_logger = trace_logger
@@ -110,7 +144,6 @@ class PDFParser:
         result = None
         last_error = None
         
-        # Try parsers in order until one succeeds
         for parser_name in self.parsers:
             try:
                 if parser_name == "pymupdf":
@@ -134,22 +167,33 @@ class PDFParser:
             })
             raise Exception(f"Failed to parse PDF. Last error: {last_error}")
         
-        # Fix spacing issues
         result["text"] = self._fix_spacing(result["text"])
         result["text_length"] = len(result["text"])
+        result["parsed_timestamp"] = datetime.now().isoformat()
         
-        # Save parsed content
         if self.save_parsed and output_dir:
             try:
                 parsed_file = Path(output_dir) / f"{result['title']}_parsed.txt"
                 with open(parsed_file, 'w', encoding='utf-8') as f:
+                    f.write(f"{'='*80}\n")
+                    f.write(f"PARSED PDF CONTENT\n")
+                    f.write(f"{'='*80}\n")
                     f.write(f"Title: {result['title']}\n")
                     f.write(f"Source: {pdf_path}\n")
                     f.write(f"Pages: {result['num_pages']}\n")
                     f.write(f"Parser: {result.get('parser', 'unknown')}\n")
+                    f.write(f"Parsed At: {result['parsed_timestamp']}\n")
+                    f.write(f"Text Length: {result['text_length']} characters\n")
                     f.write(f"{'='*80}\n\n")
                     f.write(result['text'])
                 result["parsed_file"] = str(parsed_file)
+                
+                self.trace_logger.log(self.agent_name, "parsed_content_saved", {
+                    "title": result['title'],
+                    "parsed_file": str(parsed_file),
+                    "file_size_bytes": os.path.getsize(parsed_file),
+                    "timestamp": result['parsed_timestamp']
+                })
             except Exception as e:
                 logger.warning(f"Failed to save parsed content: {e}")
         
@@ -157,7 +201,9 @@ class PDFParser:
             "title": result['title'],
             "pages": result['num_pages'],
             "text_length": result['text_length'],
-            "parser": result.get('parser', 'unknown')
+            "parser": result.get('parser', 'unknown'),
+            "parsed_file": result.get("parsed_file", "not_saved"),
+            "timestamp": result['parsed_timestamp']
         })
         
         return result
@@ -172,19 +218,18 @@ class PDFParser:
         return text
     
     def _parse_with_pymupdf(self, pdf_path: str) -> Dict[str, Any]:
-        """Parse with PyMuPDF - FIXED VERSION"""
+        """Parse with PyMuPDF"""
         import pymupdf
         
         title = Path(pdf_path).stem
         full_text = ""
         
         doc = pymupdf.open(pdf_path)
-        num_pages = len(doc)  # Store count before iteration
+        num_pages = len(doc)
         
         for page_num in range(num_pages):
             page = doc[page_num]
             page_text = page.get_text("text")
-            
             if page_text:
                 full_text += page_text + "\n"
         
@@ -208,7 +253,6 @@ class PDFParser:
         
         with pdfplumber.open(pdf_path) as pdf:
             num_pages = len(pdf.pages)
-            
             for page in pdf.pages:
                 page_text = page.extract_text(x_tolerance=3, y_tolerance=3, layout=True)
                 if page_text:
@@ -233,7 +277,6 @@ class PDFParser:
         with open(pdf_path, 'rb') as file:
             pdf_reader = PyPDF2.PdfReader(file)
             num_pages = len(pdf_reader.pages)
-            
             for page in pdf_reader.pages:
                 page_text = page.extract_text()
                 if page_text:
@@ -298,14 +341,14 @@ Be specific and extract from the paper."""
             
             response_text = response['message']['content']
             
-            # Log LLM interaction
             self.trace_logger.log_llm_interaction(
                 self.agent_name,
                 user_prompt,
                 response_text,
                 self.model,
                 self.temperature,
-                self.seed
+                self.seed,
+                response_threshold=500
             )
             
             summary = self._extract_summary_flexibly(response_text, title)
@@ -410,10 +453,10 @@ Provide:
             
             response_text = response['message']['content']
             
-            # Log LLM interaction
             self.trace_logger.log_llm_interaction(
                 self.agent_name, prompt, response_text,
-                self.model, self.temperature, self.seed
+                self.model, self.temperature, self.seed,
+                response_threshold=500
             )
             
             return self._parse_synthesis(response_text)
@@ -487,10 +530,10 @@ Use inline citations like [1], [2]."""
             
             survey_body = response['message']['content']
             
-            # Log LLM interaction
             self.trace_logger.log_llm_interaction(
                 self.agent_name, prompt, survey_body,
-                self.model, self.temperature, self.seed
+                self.model, self.temperature, self.seed,
+                response_threshold=500
             )
             
             references = "\n\n## References\n\n"
@@ -503,7 +546,7 @@ Use inline citations like [1], [2]."""
 
 
 class ParameterComparison:
-    """Parameter comparison and optimization tool"""
+    """Parameter comparison tool"""
     
     def __init__(self, base_config: Dict):
         self.base_config = base_config
@@ -612,13 +655,12 @@ class ParameterComparison:
 
 
 class ResearchCopilot:
-    """Main orchestrator with auto-config creation"""
+    """Main orchestrator with timestamps and execution tracking"""
     
     def __init__(self, config_path: str = "config.json", config: Dict = None):
         if config:
             self.config = config
         else:
-            # Auto-create config if missing
             if not os.path.exists(config_path):
                 print(f"⚠️  Config file not found. Creating default: {config_path}")
                 default_config = {
@@ -646,77 +688,261 @@ class ResearchCopilot:
             with open(config_path, 'r') as f:
                 self.config = json.load(f)
         
-        self.trace_logger = TraceLogger(self.config["output"]["trace_file"])
-        
+        # Create all directories
         Path(self.config["output"]["summaries_dir"]).mkdir(exist_ok=True)
         self.parsed_dir = Path(self.config["output"]["summaries_dir"]) / "parsed_content"
         self.parsed_dir.mkdir(exist_ok=True)
+        
+        self.response_dir = Path("llm_responses")
+        self.response_dir.mkdir(exist_ok=True)
+        
+        self.trace_logger = TraceLogger(
+            self.config["output"]["trace_file"],
+            response_dir=str(self.response_dir)
+        )
         
         self.pdf_parser = PDFParser(self.trace_logger, save_parsed=True)
         self.summarizer = SummarizerAgent(self.config, self.trace_logger)
         self.synthesizer = SynthesisAgent(self.config, self.trace_logger)
         self.survey_generator = SurveyGeneratorAgent(self.config, self.trace_logger)
+        
+        self.trace_logger.log("Orchestrator", "initialization", {
+            "config_path": config_path if not config else "inline_config",
+            "trace_file": self.config["output"]["trace_file"],
+            "llm_response_dir": str(self.response_dir),
+            "summaries_dir": self.config["output"]["summaries_dir"],
+            "parsed_content_dir": str(self.parsed_dir)
+        })
     
     def process_papers(self, pdf_folder: str, verbose: bool = True):
-        """Execute pipeline"""
-        if verbose:
-            print(f"\n{'='*60}\nResearch Co-pilot Pipeline\n{'='*60}\n")
+        """Execute pipeline with timestamps and execution tracking"""
         
-        # Parse
+        start_time = datetime.now()
+        
+        if verbose:
+            print(f"\n{'='*60}")
+            print(f"Research Co-pilot Pipeline")
+            print(f"Started: {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
+            print(f"{'='*60}\n")
+        
+        # STAGE 1
         if verbose:
             print("📄 STEP 1: Parsing PDFs...")
+        
+        stage1_start = datetime.now()
+        
         pdf_files = sorted(list(Path(pdf_folder).glob("*.pdf")))
         if not pdf_files:
             raise ValueError(f"No PDFs in {pdf_folder}")
         
+        if verbose:
+            print(f"   Found {len(pdf_files)} PDFs")
+        
         parsed_papers = []
         for i, pdf_file in enumerate(pdf_files, 1):
             if verbose:
-                print(f"  [{i}/{len(pdf_files)}] {pdf_file.name}")
+                print(f"   [{i}/{len(pdf_files)}] {pdf_file.name}")
             parsed = self.pdf_parser.parse_pdf(str(pdf_file), str(self.parsed_dir))
             parsed_papers.append(parsed)
         
-        # Summarize
+        stage1_end = datetime.now()
+        stage1_duration = (stage1_end - stage1_start).total_seconds()
+        
         if verbose:
-            print(f"\n📝 STEP 2: Generating summaries...")
+            print(f"✅ Parsed {len(parsed_papers)} papers (took {stage1_duration:.2f}s)\n")
+        
+        # STAGE 2
+        if verbose:
+            print(f"📝 STEP 2: Generating summaries...")
+        
+        stage2_start = datetime.now()
+        
         summaries = []
         for i, paper in enumerate(parsed_papers, 1):
             if verbose:
-                print(f"  [{i}/{len(parsed_papers)}] {paper['title']}")
+                print(f"   [{i}/{len(parsed_papers)}] {paper['title']}")
+            
             summary = self.summarizer.summarize(paper["text"], paper["title"])
+            summary["generated_timestamp"] = datetime.now().isoformat()
+            summary["stage"] = "summarization"
+            
             summaries.append(summary)
             
             summary_file = Path(self.config["output"]["summaries_dir"]) / f"{paper['title']}.json"
             with open(summary_file, 'w', encoding='utf-8') as f:
                 json.dump(summary, f, indent=2, ensure_ascii=False)
+            
+            self.trace_logger.log("Orchestrator", "summary_saved", {
+                "title": paper['title'],
+                "summary_file": str(summary_file),
+                "timestamp": summary["generated_timestamp"]
+            })
+            
+            if verbose:
+                preview = summary.get('main_contribution', '')[:60]
+                print(f"      ✓ {preview}...")
         
-        # Synthesize
+        stage2_end = datetime.now()
+        stage2_duration = (stage2_end - stage2_start).total_seconds()
+        
         if verbose:
-            print(f"\n🔄 STEP 3: Synthesizing insights...")
+            print(f"✅ Generated {len(summaries)} summaries (took {stage2_duration:.2f}s)\n")
+        
+        # STAGE 3
+        if verbose:
+            print(f"🔄 STEP 3: Synthesizing insights...")
+        
+        stage3_start = datetime.now()
+        
         synthesis = self.synthesizer.synthesize(summaries)
+        synthesis["generated_timestamp"] = datetime.now().isoformat()
+        synthesis["stage"] = "synthesis"
+        synthesis["num_papers_analyzed"] = len(summaries)
         
         synthesis_file = Path(self.config["output"]["summaries_dir"]) / "synthesis.json"
         with open(synthesis_file, 'w', encoding='utf-8') as f:
             json.dump(synthesis, f, indent=2, ensure_ascii=False)
         
-        # Survey
+        self.trace_logger.log("Orchestrator", "synthesis_saved", {
+            "synthesis_file": str(synthesis_file),
+            "timestamp": synthesis["generated_timestamp"]
+        })
+        
+        stage3_end = datetime.now()
+        stage3_duration = (stage3_end - stage3_start).total_seconds()
+        
         if verbose:
-            print(f"\n📋 STEP 4: Generating survey...")
+            print(f"✅ Synthesis complete (took {stage3_duration:.2f}s)\n")
+        
+        # STAGE 4
+        if verbose:
+            print(f"📋 STEP 4: Generating survey...")
+        
+        stage4_start = datetime.now()
+        
         survey = self.survey_generator.generate_survey(summaries, synthesis)
         
-        with open(self.config["output"]["survey_file"], 'w', encoding='utf-8') as f:
-            f.write(survey)
+        survey_file = self.config["output"]["survey_file"]
+        survey_timestamp = datetime.now().isoformat()
+        word_count = len(survey.split())
+        
+        survey_with_metadata = f"""---
+title: Research Paper Mini-Survey
+generated: {survey_timestamp}
+papers_analyzed: {len(summaries)}
+word_count: {word_count}
+model: {self.config['model']['name']}
+temperature: {self.config['model']['temperature']}
+seed: {self.config['model']['seed']}
+---
+
+{survey}
+
+---
+Generated by Research Co-pilot
+Timestamp: {survey_timestamp}
+Pipeline Duration: {(datetime.now() - start_time).total_seconds():.2f}s
+---
+"""
+        
+        with open(survey_file, 'w', encoding='utf-8') as f:
+            f.write(survey_with_metadata)
+        
+        self.trace_logger.log("Orchestrator", "survey_saved", {
+            "survey_file": survey_file,
+            "word_count": word_count,
+            "timestamp": survey_timestamp
+        })
+        
+        stage4_end = datetime.now()
+        stage4_duration = (stage4_end - stage4_start).total_seconds()
+        
+        end_time = datetime.now()
+        total_duration = (end_time - start_time).total_seconds()
         
         if verbose:
-            print(f"\n{'='*60}\n✅ Pipeline Complete!\n{'='*60}\n")
+            print(f"✅ Survey complete ({word_count} words, took {stage4_duration:.2f}s)\n")
+            print(f"{'='*60}\n✅ Pipeline Complete!\n{'='*60}")
+            print(f"Started:  {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
+            print(f"Finished: {end_time.strftime('%Y-%m-%d %H:%M:%S')}")
+            print(f"Total Duration: {total_duration:.2f}s")
+            print(f"\nStage Durations:")
+            print(f"  Stage 1 (Parsing):       {stage1_duration:.2f}s")
+            print(f"  Stage 2 (Summarization): {stage2_duration:.2f}s")
+            print(f"  Stage 3 (Synthesis):     {stage3_duration:.2f}s")
+            print(f"  Stage 4 (Survey):        {stage4_duration:.2f}s")
+            print(f"\n📁 Output files:")
+            print(f"   Trace: {self.config['output']['trace_file']}")
+            print(f"   LLM Responses: llm_responses/")
+            print(f"   Summaries: {self.config['output']['summaries_dir']}/")
+            print(f"   Survey: {survey_file}")
+            print(f"{'='*60}\n")
+        
+        # Create execution summary
+        summary_report = {
+            "pipeline_execution": {
+                "start_time": start_time.isoformat(),
+                "end_time": end_time.isoformat(),
+                "total_duration_seconds": total_duration,
+                "stage_durations": {
+                    "parsing": stage1_duration,
+                    "summarization": stage2_duration,
+                    "synthesis": stage3_duration,
+                    "survey_generation": stage4_duration
+                }
+            },
+            "configuration": {
+                "model": self.config["model"]["name"],
+                "temperature": self.config["model"]["temperature"],
+                "seed": self.config["model"]["seed"]
+            },
+            "results": {
+                "papers_processed": len(pdf_files),
+                "summaries_generated": len(summaries),
+                "survey_word_count": word_count
+            },
+            "output_files": {
+                "trace_file": self.config["output"]["trace_file"],
+                "summaries_dir": self.config["output"]["summaries_dir"],
+                "synthesis_file": str(synthesis_file),
+                "survey_file": survey_file,
+                "llm_responses_dir": str(self.response_dir)
+            }
+        }
+        
+        execution_summary_file = f"execution_summary_{start_time.strftime('%Y%m%d_%H%M%S')}.json"
+        with open(execution_summary_file, 'w', encoding='utf-8') as f:
+            json.dump(summary_report, f, indent=2, ensure_ascii=False)
+        
+        if verbose:
+            print(f"📊 Execution summary: {execution_summary_file}\n")
+
+
+def ensure_directories():
+    """Ensure all necessary directories exist"""
+    dirs = [
+        "llm_responses",
+        "summaries",
+        "summaries/parsed_content",
+        "uploads",
+        "comparison_summaries",
+        "web_summaries"
+    ]
+    for dir_path in dirs:
+        Path(dir_path).mkdir(parents=True, exist_ok=True)
+    print(f"✅ Verified/created {len(dirs)} directories")
 
 
 def main_interactive():
     """Interactive terminal interface"""
+    
+    ensure_directories()
+    
     print("""
 ╔════════════════════════════════════════════════════════════╗
 ║         Research Co-pilot - Interactive Mode               ║
 ║              Multi-Agent Paper Analysis System             ║
+║          With Smart LLM Response Logging                   ║
 ╚════════════════════════════════════════════════════════════╝
     """)
     
@@ -727,10 +953,11 @@ def main_interactive():
         print("1. Run Analysis Pipeline")
         print("2. Compare Parameters")
         print("3. View Trace Logs")
-        print("4. Exit")
+        print("4. View LLM Response Files")
+        print("5. Exit")
         print("="*60)
         
-        choice = input("\nSelect option (1-4): ").strip()
+        choice = input("\nSelect option (1-5): ").strip()
         
         if choice == "1":
             pdf_folder = input("Enter PDF folder path: ").strip()
@@ -790,15 +1017,51 @@ def main_interactive():
                 for line in f:
                     entry = json.loads(line)
                     if entry['action'] == 'llm_interaction':
-                        print(f"[{entry['timestamp']}] {entry['agent']} - LLM Call")
+                        storage = entry['data'].get('response_storage', 'unknown')
+                        print(f"[{entry['timestamp']}] {entry['agent']} - LLM Call ({storage})")
                         print(f"  Model: {entry['data']['model']}")
                         print(f"  Temp: {entry['data']['temperature']}, Seed: {entry['data']['seed']}")
-                        print(f"  Response: {entry['data']['response_preview']}")
+                        if storage == 'inline':
+                            print(f"  Response: {entry['data']['response_preview']}")
+                        else:
+                            print(f"  Response File: {entry['data'].get('response_file', 'N/A')}")
                         print()
                     else:
                         print(f"[{entry['timestamp']}] {entry['agent']}.{entry['action']}")
         
         elif choice == "4":
+            response_dir = Path("llm_responses")
+            if not response_dir.exists():
+                print("❌ LLM response directory not found")
+                continue
+            
+            files = list(response_dir.glob("*.txt"))
+            if not files:
+                print("❌ No LLM response files found")
+                continue
+            
+            print(f"\n{'='*60}")
+            print(f"LLM Response Files ({len(files)} files)")
+            print(f"{'='*60}\n")
+            
+            for i, file in enumerate(sorted(files), 1):
+                print(f"{i}. {file.name}")
+            
+            choice_file = input("\nEnter file number to view (or 'q' to return): ").strip()
+            if choice_file.lower() != 'q':
+                try:
+                    file_idx = int(choice_file) - 1
+                    if 0 <= file_idx < len(files):
+                        with open(sorted(files)[file_idx], 'r', encoding='utf-8') as f:
+                            print(f"\n{'='*60}")
+                            print(f.read())
+                            print(f"{'='*60}\n")
+                    else:
+                        print("❌ Invalid file number")
+                except ValueError:
+                    print("❌ Invalid input")
+        
+        elif choice == "5":
             print("\nGoodbye!")
             break
         
