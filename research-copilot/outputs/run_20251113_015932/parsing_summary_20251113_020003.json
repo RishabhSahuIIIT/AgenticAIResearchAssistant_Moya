@@ -1,0 +1,42 @@
+{
+  "timestamp": "20251113_020003",
+  "pdf_folder": "/home/rishabh-sahu/Desktop/MOYA_Tutorial/papers",
+  "total_papers": 5,
+  "papers": [
+    {
+      "filename": "2816839.2816913.pdf",
+      "title": "Microsoft Word - a127-AlQudah.doc",
+      "author": "s",
+      "num_pages": 5,
+      "text_length": 24472
+    },
+    {
+      "filename": "Comparison_of_COSYSMO_Model_with_Different_Software_Cost_Estimation_Techniques.pdf",
+      "title": "Microsoft Word - 143-paper-143_formated - V3",
+      "author": "Vikas Arya",
+      "num_pages": 5,
+      "text_length": 15332
+    },
+    {
+      "filename": "software-cost-estimation-models-and-techniques-a-survey-IJERTV3IS20384.pdf",
+      "title": "Software Cost Estimation Models and Techniques: A Survey",
+      "author": "Yansi Keim, Manish Bhardwaj, Shashank Saroop, Aditya Tandon",
+      "num_pages": 6,
+      "text_length": 24533
+    },
+    {
+      "filename": "delphi-technique-for-the-software-effort-estimation-an-outline-for-an-expert-judgment-method-IJERTCONV3IS19088.pdf",
+      "title": "Delphi Technique for the Software Effort Estimation -- An Outline for an Expert Judgment Method",
+      "author": "Dr. A M Nageswara Yogi,",
+      "num_pages": 11,
+      "text_length": 61678
+    },
+    {
+      "filename": "3544902.3546238.pdf",
+      "title": "On the Relationship Between Story Points and Development Effort in Agile Open-Source Software",
+      "author": "Vali Tawosi, Rebecca Moussa, Federica Sarro",
+      "num_pages": 12,
+      "text_length": 76765
+    }
+  ]
+}

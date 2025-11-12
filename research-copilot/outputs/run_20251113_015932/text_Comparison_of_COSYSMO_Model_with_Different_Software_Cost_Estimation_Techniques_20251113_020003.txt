@@ -1,0 +1,706 @@
+Filename: Comparison_of_COSYSMO_Model_with_Different_Software_Cost_Estimation_Techniques.pdf
+Title: Microsoft Word - 143-paper-143_formated - V3
+Author: Vikas Arya
+Pages: 5
+Timestamp: 2025-11-13T02:00:03.877237
+
+================================================================================
+EXTRACTED TEXT:
+================================================================================
+
+2019 2nd International Conference on Issues and Challenges in Intelligent Computing Techniques (ICICT) 
+978-1-7281-1772-0 ©2019 IEEE  
+Comparison of COSYSMO Model with Different 
+Software Cost Estimation Techniques 
+ 
+Neha Yadav1, Neha Gupta2, Mukul Aggarwal3, Aruna Yadav4 
+1,2,3,4KIET Group of Institutions, Uttar Pradesh, India
+ 
+Abstract— Cost Estimation of any software is process of 
+evaluating the estimating cost and effort which is must necessary 
+to build any software system or project for increasing the output. 
+The basic input is the cost drivers set and the size of code and the 
+output is the effort which is calculated in terms of Person-Months 
+(PM’s). To estimate cost for software is the main portions of any 
+project type and right estimation of cost for the software will 
+help in completing project in of time and budget. Proper cost 
+estimation of a software project is highly needed to avoid any 
+risk failure. So, there is a strong need to calculate the project’s 
+cost annually and compare it to the other techniques. This paper 
+deals with the analysis and comparison of COCOMO model of 
+Boehm’s and COSYSMO model of Valerdi’s through the help of 
+formulae’s and an online tool present at the CSSE website. For 
+this we have used the COCOMO dataset and it has been 
+observed that COSYSMO model works better than the 
+COCOMO model in every aspect. 
+ 
+Keywords- SCE-Software cost estimation, software cost 
+estimation 
+methods, 
+COCOMO-Cost 
+constructive 
+model,                 
+CSSE-Centre for Systems and Software Engineering Website, PM- 
+Person Month, KLOC-Kilo lines of code. 
+ 
+I. 
+INTRODUCTION 
+ 
+Cost estimation of any software project is process of an 
+generic estimated value of the cost idea of a product, program, 
+project, which is basically computed on the basis of collected 
+information (1). Software cost estimation is among one of the 
+software development activity which basically focus on how 
+to estimates of associated and calculations of time and 
+stipulated effort with project. The accurate cost estimation at 
+the starting stage of the project is very important for avoiding 
+any risk failures. If somehow fail to estimate then it would 
+result the cost of the project to be very high and consequently 
+reaching 150-200% more than the original cost (2). But there 
+are many it difficulties to estimate this cost effectively. 
+ 
+There are different methods for the estimation of cost in 
+software engineering: 
+ 
+1. Expert Judgment (Expertise Based) 
+2. Top - Down 
+3. Bottom – Up 
+4. Algorithmic (Parametric) model 
+5. Price to Win Estimation 
+6. Estimation by Analogy 
+ 
+Frank Freiman in 1960 developed the PRICE model for 
+hardware which subsequently began the history of SCE. In 
+1970 the researchers used correlation and regression 
+techniques to analyze many projects and attempts to the factor  
+ 
+identification which directly implies to affect the cost of the 
+any software development. (3, 4) 
+ 
+ 
+COCOMO is divided into further three levels-The first 
+level, Basic COCOMO model is proficient for very early, fast 
+and order of software roughly for finding the estimate costs. 
+The second level is Intermediate COCOMO which is based on 
+the cost drivers and the third level is detailed/completed 
+COCOMO considers for the control of different phases of 
+project. In 2002, another model was made by Ricardo Valerdi 
+known as COSYSMO stands for Constructive System 
+Engineering Cost Model) (5). It gives an estimate in the form 
+of person-months. COCOMO works only for software projects 
+but COSYSMO works for both hardware and software projects. 
+Calculations of COSYSMO are based on the estimates of size 
+of project, which is calculated in terms of four size drivers. On 
+the other hand COCOMO uses less cost drivers whereas 
+COSYSMO model uses more cost drivers and functionality 
+which directly upgrades our process to estimate the cost. 
+COCOMO is based on a software tradition approach and 
+mainly focuses specifically on software development life cycle 
+phases which are being defined by MBASE2 while COSYSMO 
+provided by ISO/IEC 15288(6). 
+   
+Here, the usage of COSYSMO approach has proposed for 
+the cost of software project calculation. It has been found this 
+technique is much better than the cost of other estimation 
+procedures for accuracy view. In this paper had made the 
+comparisons between the COCOMO model and COSYSMO 
+model with the help of formulae’s and an online tool present at 
+the CSSE (Center for Systems and Software Engineering) 
+website. 
+II. 
+LITERATURE SURVEY 
+ 
+In the last four decades, various effort estimation models 
+have been implemented. Function Point Analysis (FPA) and 
+COCOMO model are the most frequently used methods for 
+estimating cost and effort of software projects. Literature survey 
+refers to some of the research papers which we have used and 
+studied for conducting our experiments. 
+ 
+FPA is an approach to estimate size and complexity for 
+software function that are delivered to the user. This method 
+fails to deal with non-linear and interactions between the kind 
+and effort taken. This metric firstly measures the functionality 
+which is involved by the count of the input, output, logical and 
+queries which have been included by the software program. 
+These types of counts are weighted and depending upon the 
+difficulties involved modified by fourteen “complexity factors”. 
+Some years ago, A modelling techniques have been proposed 
+Authorized licensed use limited to: INTERNATIONAL INSTITUTE OF INFORMATION TECHNOLOGY. Downloaded on November 09,2025 at 20:35:12 UTC from IEEE Xplore.  Restrictions apply
+
+
+ 
+which contain artificial neural networks (ANN), fuzzy 
+techniques and analogy-based reasoning (2, 9). In analogy 
+based cost estimation, a major role has been played by 
+similarity measures between a pair of projects (10). These 
+models calculate the distance between the current software 
+project and past software projects and then finds conclusions 
+for the most similar project. (11). 
+  
+Further many researchers tried to develop an efficient and 
+effective model for the determination of the cost of a model 
+but the approaches which they have used somehow lacked in 
+one sense or the other. Main problem in  cost estimation 
+process of any software is the data accessibility which is 
+needed to verify the accuracy of any proposed models, metrics 
+and functional techniques[3].Some other challenges could be 
+the uncertainty which are involved at the starting of the 
+project. There arouse many cases in which the client itself is 
+not very clear about the whole complete requirement. 
+Estimation also plays an important factor as it must be done by 
+the developer or in assistance with the developer. Sometimes 
+the estimation is not done by the developer which may directly 
+leads to huge mismatch. 
+ 
+III. 
+METHODOLOGY 
+ 
+Focusing and dealing with the two methods which are 
+COCOMO model and COSYSMO model. Methodology refers 
+to the methods which we have used i.e. COCOMO model 
+COSYSMO model. 
+ 
+COCOMO basically is of three types-1.Basic 
+COCOMO model 
+ 
+2. Intermediate COCOMO model 
+ 
+3. Complete/Detailed COCOMO model 
+ 
+ 
+Table I 
+Basic COCOMO COEFFICIENTS 
+ 
+COCOMO is applied to three classes of projects: 
+ 
+1. Organic projects -small sized project typically 
+2-250 KLOC, experienced developers in the 
+known environment, not tight deadline. 
+2. Semi-detached projects – Size is minimum 
+projects typically 60-400 KLOC, average 
+experience 
+on 
+similar 
+project, 
+medium 
+deadline. 
+3. Embedded projects – large project typically 
+over 300 KLOC, little bit previous experience, 
+hard deadline.  
+Basic COCOMO equation- 
+Effort Applied (E) = a*(size)b*EAF [ man-months ] Where,  
+EAF- Effort Adjustment Factor Size- Lines of code of your 
+project. 
+COSYSMO is an open model that includes the eighteen 
+different parameters: 
+ 
+1. 
+4 size drivers 
+ 
+2. 
+14 effort multipliers. 
+ 
+It build on some architecture which is similar to COCOMO II, 
+and integrates with the accepted engineering of system 
+standards to define its diversity [13].The COSYSMO 
+calculations are based on the estimates of a size of project cost, 
+which has been measured in terms of four size drivers: 
+ 
+• 
+Requirements 
+ 
+• 
+Interfaces 
+ 
+• 
+Algorithms 
+• 
+Scenarios 
+The basic COSYSMO equations take the form-is taken to be 
+less than 1 for small projects and great than equal to 1 for large 
+projects. The value of effort multiplier is chosen from the 
+above mentioned rely cost driver table. 
+Authorized licensed use limited to: INTERNATIONAL INSTITUTE OF INFORMATION TECHNOLOGY. Downloaded on November 09,2025 at 20:35:12 UTC from IEEE Xplore.  Restrictions apply
+
+
+ 
+ 
+ 
+Table II 
+Rely Cost Driver 
+ 
+ 
+Table III 
+COSYSMO Cost Driver
+Authorized licensed use limited to: INTERNATIONAL INSTITUTE OF INFORMATION TECHNOLOGY. Downloaded on November 09,2025 at 20:35:12 UTC from IEEE Xplore.  Restrictions apply
+
+
+In order to make the required comparison we have used 
+theoretical formulae for obtaining the results. 
+ 
+The value of calibration factor is a constant and is taken 
+to be 2.94.Furthermore, the value of scale factor For 
+calculating cost using COSYSMO Model we have  
+For the value of size and EAF we would refer the data set 
+given in table 4. 
+ 
+For the calculations we have used the above data set[2]. 
+This dataset contains two independent variables- 
+ Size and EAF (Effort Adjustment Factor).  
+ Size is in KLOC (thousands of lines of codes). 
+ 
+S.No. 
+Size 
+EAF 
+ 
+ 
+ 
+1
+46
+1.17
+ 
+ 
+ 
+2
+22
+7.62
+ 
+ 
+ 
+3
+4
+2.22
+ 
+ 
+ 
+4
+6.9
+0.4
+ 
+ 
+ 
+5
+16
+0.66
+ 
+ 
+ 
+6
+30
+2.39
+ 
+ 
+ 
+7
+18
+2.38
+ 
+ 
+ 
+8
+20
+2.38
+ 
+ 
+ 
+9
+37
+1.12
+ 
+ 
+ 
+10
+24
+0.85
+ 
+ 
+ 
+11
+3
+5.86
+ 
+ 
+ 
+12
+3.9
+3.63
+ 
+ 
+ 
+13
+3.7
+2.81
+ 
+ 
+ 
+14
+1.9
+1.78
+15
+75
+0.89
+ 
+ 
+ 
+16
+90
+0.7
+ 
+ 
+ 
+17
+38
+1.95
+ 
+ 
+ 
+18
+48
+1.16
+ 
+ 
+ 
+19
+9.4
+2.04
+ 
+ 
+ 
+20
+13
+2.81
+ 
+ 
+ 
+21
+2.14
+1
+Table IV 
+Data set used
+ 
+ 
+IV. 
+RESULTS 
+ 
+Now the table 5 shows the comparison between COCOMO 
+and COSYSMO using theoretical formulae. Result analysis 
+with the help of formulae’s (manually) and with the help of 
+tool. Section 5-Finally the proposed work is concluded with 
+the references and future scope. 
+ 
+From the calculations we observed that COCOMO model 
+requires more effort in person months as compared to 
+COSYSMO model which basically shows that COSYSMO is 
+a better approach as compared to COCOMO model. 
+ 
+Furthermore, the same results could also be obtained by the 
+help of tool present on the CSSE website. The tool also draws 
+a comparison between the two models and proves that 
+COSYSMO approach is far better than the COCOMO 
+approach for calculating the cost of a project. 
+ 
+Table V 
+: Results obtained 
+ 
+ 
+ 
+V. 
+CONCLUSIONS 
+This paper proposed the difference between the 
+COCOMO model and COSYSMO model for estimating cost 
+in terms of effort in person-months. As per simulations result 
+by using the COCOMO dataset, COSYSMO generates the 
+new project cost in much correct manner compared to the 
+COCOMO. 
+ 
+Till now the tool could only be used for large lines of 
+codes but it can also be enhanced to give efficient results using 
+less line of codes. 
+S.No. 
+Size 
+EAF 
+COCOMO 
+COSYSMO 
+ 
+ 
+ 
+ 
+ 
+1 
+46 
+1.17 
+156.42 
+135.24 
+2 
+22 
+7.62 
+469.58 
+64.68 
+ 
+ 
+ 
+ 
+ 
+3 
+4 
+2.22 
+22.84 
+11.76 
+4 
+6.9 
+0.4 
+27.29 
+20.286 
+5 
+16 
+0.66 
+50.11 
+47.04 
+6 
+30 
+2.39 
+203.97 
+88.2 
+ 
+ 
+ 
+ 
+ 
+7 
+18 
+2.38 
+118.80 
+52.92 
+8 
+20 
+2.38 
+132.69 
+58.8 
+ 
+ 
+ 
+ 
+ 
+9 
+37 
+1.12 
+119.13 
+108.78 
+ 
+ 
+ 
+ 
+ 
+10 
+24 
+0.85 
+77.39 
+70.56 
+11 
+3 
+5.86 
+44.57 
+8.82 
+ 
+ 
+ 
+ 
+ 
+12 
+3.9 
+3.63 
+36.36 
+11.46 
+13 
+3.7 
+2.81 
+26.63 
+10.878 
+ 
+ 
+ 
+ 
+ 
+14 
+1.9 
+1.78 
+8.38 
+5.586 
+15 
+75 
+0.89 
+198.79 
+220.5 
+ 
+ 
+ 
+ 
+ 
+16 
+90 
+0.7 
+270.34 
+264.6 
+17 
+38 
+1.95 
+213.31 
+111.72 
+18 
+48 
+1.16 
+162.17 
+141.2 
+ 
+ 
+ 
+ 
+ 
+19
+9.4
+2.04
+51.47
+27.636
+20 
+13 
+2.81 
+99.66 
+38.22 
+ 
+ 
+ 
+ 
+ 
+21
+2.14
+1
+8.33
+6.2916
+ 
+ 
+ 
+ 
+ 
+Authorized licensed use limited to: INTERNATIONAL INSTITUTE OF INFORMATION TECHNOLOGY. Downloaded on November 09,2025 at 20:35:12 UTC from IEEE Xplore.  Restrictions apply
+
+
+REFERENCES 
+ 
+[1] www.businessdictionary.com/definition/cost estimate.html. 
+[2] Sweta Kumari,Shashank Pushkar, ‘‘Comparison and Analysis of 
+Different Software Cost Estimation  Methods,”  (IJACSA)  International 
+Journal of Advanced Computer Science and Applications, Vol. 4, No.1, 
+2013. 
+[3] Abedallah Zaid, Mohd Hasan Selamat, Abdual Azim Abd Ghani, 
+Rodziah Atan and Tieng Wei Koh, ‘‘Issues in Software Cost 
+Estimation,’’ IJCSNS International Journal of Computer Science and 
+Network Security, VOL.8 No.11, November 2008 
+ 
+[4] 
+B. Boehm, and C. Abts, “Software Development Cost Estimation 
+Approaches – A Survey1”, University of Southern California. 
+ 
+[5] 
+cosysmo.mit.edu/wp-content/uploads/.../academic-COSYSMO-User-
+Manual-v1.1.doc 
+ 
+[6] 
+https://en.wikipedia.org/wiki/Function_point 
+ 
+[7] 
+To Evaluate the Function Point Analysis: A Case Study TSOI Ho-Leung 
+Software Quality Institute Griffith University. 
+ 
+[8] 
+K.  Vinay  Kumar,  V.  Ravi  and  Mahil  Carr, “Software Cost 
+Estimation using Soft Computing Approaches,” Handbook on Machine 
+Learning 
+Applications and Trends: Algorithms, Methods and 
+Techniques, Eds. E. Soria, J.D. Martin, R. Magdalena, M.Martinez, A.J. 
+Serrano, IGI Global, USA, 2009. 
+[9] 
+Y.F. Li, M. Xie and T.N. Goh, “A study of project selection and feature 
+weighting for analogy based software cost estimation,” Journal of 
+Systems and Software, 2009, pp. 241–252. 
+[10] N.H. Chiu and S.J.Huang, “The adjusted analogy-based software effort 
+estimation based on similarity distances,” System and Software, 2007, 
+pp.628-640. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+[11]  Barry W. Boehm "Software Cost Estimation Meets Software 
+Diversity," 2017 IEEE/ACM 39th IEEE International Conference on 
+Software Engineering Companion. 
+[12] http://www.softstarsystems.com/oversys.htm. 
+[13] B. Boehm, B. Clark, E. Horowitz, R. Madachy, R. Shelby and C. 
+Westland, ‘‘Cost models for future software life cycle processes: 
+COCOMO 2.0,’’ Annals of Software Engineering,1995. 
+[14] D. Galorath and R. Evans, Software Estimation and Risk Management, 
+Auerbach, 2006. 
+ 
+[15] D. Garmus and D. Herron, Function Point Analysis, Addison Wesley, 
+2001. 
+[16] Elnaz Eskandarian Miandoab" A Novel hybrid Algorithm for Software 
+Cost Estimation," Engineering, Technology & Applied Science 
+Research Vol. 6, No. 3, 2016, 1018-1022. 
+[17] Isa Maleki, Ali Ghaffari, and Mohammad Masdari " A New Approach 
+for Software Cost Estimation with Hybrid Genetic Algorithm and Ant 
+Colony Optimization," International Journal of Innovation and Applied 
+Studies ISSN 2028-9324 Vol. 5 No. 1 Jan. 2014, pp. 72- 81. 
+[18] Josephin.M.Baby Anusha M.E , Rajeswari Mukesh M.E, Ph.d " A Study 
+on Software Cost Estimation," National Conference on Architecture, 
+Software systems and Green computing-2013(NCASG2013). 
+ 
+[19] Tarig Ahmed Khalid Eng-Thiam Yeoh, ‘‘Early Cost Estimation of 
+Software 
+Reworks 
+Using 
+Fuzzy 
+Requirement-Based 
+Model,’’ 
+International Conference on Communication, Control, Computing and 
+Electronics Engineering (ICCCCEE), Khartoum, Sudan . 2017 
+Authorized licensed use limited to: INTERNATIONAL INSTITUTE OF INFORMATION TECHNOLOGY. Downloaded on November 09,2025 at 20:35:12 UTC from IEEE Xplore.  Restrictions apply

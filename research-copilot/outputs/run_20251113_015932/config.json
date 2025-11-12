@@ -1,0 +1,11 @@
+{
+  "timestamp": "20251113_015932",
+  "model_name": "llama3.1",
+  "model_backend": "ollama",
+  "temperature": 0.7,
+  "seed": 42,
+  "max_papers": 6,
+  "survey_word_limit": 800,
+  "orchestrator_host": "http://127.0.0.1:11434",
+  "agent_host": "http://127.0.0.1:11435"
+}
