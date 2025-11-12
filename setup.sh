@@ -23,22 +23,34 @@ pip install -r requirements.txt
 # Create necessary directories
 echo "Creating directories..."
 mkdir -p papers
-mkdir -p summaries
-mkdir -p summaries/parsed_content
 mkdir -p uploads
-mkdir -p comparison_summaries
-mkdir -p web_summaries
 
 # Create .gitkeep files
 touch papers/.gitkeep
-touch summaries/.gitkeep
+touch uploads/.gitkeep
+
+echo ""
+echo "✅ Directory structure:"
+echo "   papers/           - Place your PDF papers here"
+echo "   uploads/          - Web app upload storage"
+echo ""
+echo "📝 Note: Run directories created automatically:"
+echo "   run_YYYYMMDD_HHMMSS/        - CLI run outputs"
+echo "   web_run_YYYYMMDD_HHMMSS/    - Web app outputs"
+echo "   comparison_YYYYMMDD_HHMMSS/ - Comparison outputs"
+echo ""
 
 # Install Ollama if not present
 if ! command -v ollama &> /dev/null; then
-    echo "Ollama not found. Please install from: https://ollama.ai"
-    echo "After installation, run: ollama pull llama3.1"
+    echo "⚠️  Ollama not found"
+    echo ""
+    echo "Please install Ollama:"
+    echo "  • Visit: https://ollama.ai"
+    echo "  • After installation, run: ollama pull llama3.1"
+    echo ""
 else
-    echo "Ollama found. Pulling llama3.1 model..."
+    echo "✅ Ollama found"
+    echo "Pulling llama3.1 model..."
     ollama pull llama3.1
 fi
 
@@ -47,9 +59,21 @@ echo "=================================="
 echo "Setup Complete!"
 echo "=================================="
 echo ""
-echo "Next steps:"
-echo "1. Activate environment: source venv/bin/activate"
-echo "2. Add PDFs to papers/ folder"
-echo "3. Run interactive mode: python research_copilot_interactive.py --interactive"
-echo "4. Or run web app: streamlit run web_app.py"
+echo "📋 Next steps:"
 echo ""
+echo "1. Activate environment:"
+echo "   source venv/bin/activate"
+echo ""
+echo "2. Add PDFs to papers/ folder"
+echo ""
+echo "3. Run interactive mode:"
+echo "   python research_copilot_interactive.py --interactive"
+echo ""
+echo "4. Or run web app:"
+echo "   streamlit run web_app.py"
+echo ""
+echo "5. Or process directly:"
+echo "   python research_copilot_interactive.py ./papers"
+echo ""
+echo "📁 Each run creates a unique timestamped directory"
+echo "=================================="
