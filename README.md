@@ -1,5 +1,8 @@
-```
+
 # Research Co-pilot: Multi-Agent System for Research Paper Analysis
+
+## Assignment github repository
+The link to code repository is : https://github.com/RishabhSahuIIIT/AgenticAIResearchAssistant_Moya
 
 ## PROJECT REPORT
 
@@ -9,8 +12,13 @@ This project implements a multi-agent system for analyzing research papers using
 
 The system parses PDF research papers, generates structured summaries, synthesizes cross-paper insights, identifies research gaps, and produces comprehensive mini-surveys with inline citations (≤800 words). All operations are fully logged with timestamps for complete observability and reproducibility.
 
-**Key Innovation**: Two separate Ollama instances run on different ports (11434 for orchestrator, 11435 for agents), allowing the decision-making process to run independently of task execution, preventing blocking and timeout issues.
+**Role of orchestrator and task agent**: Two separate Ollama instances run on different ports (11434 for orchestrator, 11435 for agents), allowing the decision-making process to run independently of task execution, preventing blocking and timeout issues.
 
+The implementation could be extended to instead setup separate ollama instances for each task agent as well, if it is required that tasks be executed concurrently. Proper synchronisation of input and outputs between agents will be required in this case.
+
+## Declaration of use of AI tools as per course policy
+In order to write code for this assignment I have taken help from certain AI tools 
+mainly claude sonnet 4.5 model (with reasoning ) on perplexity and fixed certain build related issues and dependency conflicts with the help of warp cli terminal on my device.
 ## 2. Features
 
 ### Core Capabilities
@@ -18,6 +26,12 @@ The system parses PDF research papers, generates structured summaries, synthesiz
 - **Structured Summarization**: Generates comprehensive summaries covering methodology, contributions, results, and limitations
 - **Cross-paper Synthesis**: Identifies themes, contradictions, research gaps, and future directions across multiple papers
 - **Mini-survey Generation**: Creates academic surveys with proper citations and structure (≤800 words)
+### Limitations 
+Due to time limitations on submission time and hardware considerations certain features are 
+not extended , though these limitations do not affect the main task that this system was intended to perform.
+- Current implementation only implements a single task agent (other than the orchestrator) to work at a time , so only single task agent is working at a time, this was done to avoid consuming a lot of resources on my laptop device . The work of other agent (example synthesizer) will being only after the work of currently tasked agent( summarizer) completes.
+- Current system can't automatically detect files for subset of the tasks from previous runs and constructs a new folder each time. This is done so that outputs for different runs of the system can be compared. Though we can always manually copy paste files from previous runs of the system to newly generated folder during current run and choose the next tasks in the pipeline.
+- currently the system tries to pull in llama 3.1 images during each run of the code and may not necessarily reuse existing installed instances of ollama model. 
 
 ### Technical Features
 - **Moya-based Orchestration**: Uses Moya's agent registry and orchestrator for intelligent task routing
@@ -39,15 +53,16 @@ The system parses PDF research papers, generates structured summaries, synthesiz
 - **Trace log**: Complete execution trace in JSONL format
 - **Configuration**: Run configuration including model parameters
 
-## 3. Assumptions
+## 3. Assumptions 
+Assuming that all tasks are performed in this sequence : parse -> summarize -> insights -> mini survey , using the outputs generated from immediate previous tasks.
 
 ### Environment Assumptions
 - **Operating System**: Linux/Ubuntu (scripts designed for bash)
 - **Python Version**: Python 3.8 or higher with venv support
 - **Ollama Installation**: Ollama installed and accessible via command line
 - **System Resources**: Minimum 16GB RAM recommended for running two Llama 3.1 instances
-- **GPU (Optional)**: 8GB+ VRAM if using GPU acceleration
-- **Disk Space**: Sufficient space for model storage (~5GB for Llama 3.1)
+- **GPU (Optional)**: 8GB+ VRAM if using GPU acceleration but not mandatory
+- **Disk Space**: Sufficient space for model storage (~5GB for Llama 3.1) per agent so at least 10 GB
 
 ### Input Assumptions
 - **PDF Format**: Research papers must be in PDF format
@@ -68,10 +83,12 @@ The system parses PDF research papers, generates structured summaries, synthesiz
 - **API Stability**: Assumes Moya API matches the structure used in imports
 - **Ollama Integration**: Moya's OllamaAgent supports base_url configuration
 
-## 4. How It Works
+
+## 4. Approach
+
 
 ### System Architecture
-
+```text
 ┌─────────────────────────────────────────────────────┐
 │              User Interface (main.py)               │
 │         Interactive Menu / Command-line             │
@@ -81,7 +98,7 @@ The system parses PDF research papers, generates structured summaries, synthesiz
 ┌─────────────────────────────────────────────────────┐
 │        Moya Orchestrator (port 11434)               │
 │  - Analyzes pipeline state                          │
-│  - Decides next task using LLM                      │
+│  - Decides next task using LLM   ( ollama llama3.1) │
 │  - Uses Moya's agent registry                       │
 └────────────────────┬────────────────────────────────┘
                      │ Task Decision
@@ -103,7 +120,7 @@ The system parses PDF research papers, generates structured summaries, synthesiz
 │  - Complete execution trace                         │
 │  - All LLM interactions saved                       │
 └─────────────────────────────────────────────────────┘
-
+```
 ### Execution Flow
 
 1. **Initialization**
@@ -156,6 +173,35 @@ The system parses PDF research papers, generates structured summaries, synthesiz
    - Display summary to user
    - All outputs in timestamped folder
 
+##  Design decisions 
+- The system works by creating two ollama llama3.1 model instances on separate urls locally.
+- I used ollama backend since it is free for use, my system can support its hardware requirements and it worked reasonably well when i directly prompted it to perform one of the functions of this project.
+- Then while executing the code user can select the tasks to be performed by number in a cli interface.
+- For parsing I used pyMupdf python library as agent tool. 
+- Other agentic tasks are performed by the second ollama spawned instance since those tasks depend on the semantics of paper content and the intermediate outputs . 
+- I implemented separate task agent ollama instance since the orchestrator while running on a single ollama instance was unable to delegate tasks to ollama since ollama was being used by it itself.
+- Each input and output of agents (including orchestrator and task agent 's llm responses) is logged in separate files in the outputs /{run/current runtimestamp} directory and the decisions taken by the orchestrator are saved in trace.jsonl file per run. 
+- Storing llm responses helped me identify and debug the ollama connection failures as well as see the flow of outputs and understand if it is consistent or not.
+- For each tasks given to ollama based orchestrator and task agent , the prompts describing their role are coded into the respective python file and additional parameters required during runtime are taken as input in separate variables.
+- The orchestrator is conveyed the different responsibilities for each agent at the beginning of the code run , and thereafter decides which agent to call based on input and context of recently completed task given by other agents's output.  Then it calls the required agent.
+
+
+
+
+### Summary of Technology Stack
+```
+Frontend: Terminal-based interface (Python input/print)
+Backend: Python 3.8+ with custom multi-agent system
+Orchestration: Moya framework with dual Ollama instances
+LLM: Llama 3.1 via Ollama
+PDF Processing: PyMuPDF (fitz)
+Storage: JSON files with timestamps
+Logging: JSONL trace files
+Environment: Linux/Ubuntu with Bash scripts
+Model Management: Shared Ollama model directory
+```
+
+
 ### Moya Framework Integration
 
 The system uses Moya's core components:
@@ -180,7 +226,7 @@ Each orchestration decision is logged with reasoning, and Moya's agent selection
    - Bash shell for scripts
 
 2. **Install Ollama**
-   ```
+   ```bash
    # Download and install Ollama
    curl -fsSL https://ollama.com/install.sh | sh
    
@@ -188,23 +234,37 @@ Each orchestration decision is logged with reasoning, and Moya's agent selection
    ollama --version
    ```
 
-3. **Download Llama 3.1 Model** (one-time download)
-   ```
+3. **Download Llama 3.1 Model** 
+   ```bash
    ollama pull llama3.1
    ```
 
-4. **Clone and Install Moya from Source**
-   ```
-   # Clone Moya repository
+
+### Installation Steps
+
+(all steps assuming virtual environment is active)
+
+0. **Clone and Install Moya from Source**
+   ```bash
+   # create a python virtual enfironment 
+   python3 -m venv <environmentName>
+   # activate virtual environment
+   source <environmentName>/bin/activate
+    
+   #or 
+   source /<repoDir>/<environmentName>/bin/activate
+
+   # Clone Moya repository to a separate folder
+   cd folder2 
    git clone https://github.com/montycloyd/moya.git
-   
-   # Install in development mode
-   cd moya
-   pip install -e .
+   # copy the moya package folder from moya repo to our repo
+   cp /folder2/moya /<repoDir>
+   cd /<repoDir>
+   # Install moya dependencies in development mode
+   pip install -e .  # installs  moya related dependencies from the folder using the pyproject.toml  stored in repoDir that I copied from original moya Git repo
    cd ..
    ```
 
-### Installation Steps
 
 1. **Create Project Structure**
    ```
@@ -212,18 +272,13 @@ Each orchestration decision is logged with reasoning, and Moya's agent selection
    cd research-copilot
    ```
 
-2. **Create Virtual Environment**
-   ```
-   python3 -m venv venv
-   source venv/bin/activate
-   ```
 
-3. **Install Python Dependencies**
+2. **Install Python Dependencies**
    ```
    pip install pymupdf ollama python-dotenv
    ```
 
-4. **Add All Project Files**
+3. **Add All Project Files**
    - Copy all the provided Python files into their respective directories
    - Place `setup_ollama.sh` and `stop_ollama.sh` in project root
    - Make scripts executable:
@@ -408,7 +463,7 @@ outputs/run_20251113_025500/
 ```
 
 ### Sample Mini-Survey Output (mini_survey_20251113_025710.txt)
-
+```text
 Agile Story Points and Development Effort: A Mini-Survey
 
 Introduction
@@ -437,7 +492,7 @@ Future research should investigate adaptive estimation techniques that account f
 [3] paper3_development_effort.pdf: Predicting Development Effort from Story Points
 [4] paper4_agile_metrics.pdf: Machine Learning Approaches to Agile Estimation
 [5] paper5_project_management.pdf: Team Dynamics in Agile Story Point Estimation
-
+```
 ## 7. Libraries and Technologies Used
 
 ### Core Python Libraries
@@ -523,7 +578,7 @@ Future research should investigate adaptive estimation techniques that account f
   - Good performance with Llama 3.1
 - **Website**: https://ollama.com
 
-**11. Llama 3.1**
+**11. Llama 3.1 instance in ollama**
 - **Developer**: Meta AI
 - **Purpose**: Large language model for text generation
 - **Why chosen**:
@@ -550,6 +605,13 @@ Future research should investigate adaptive estimation techniques that account f
 - **Purpose**: Package initialization
 - **Usage**: Makes directories importable as Python packages
 
+**reproducbility** : runs execute fine for given seed and temperature values in the config.json file 
+
+Configuration parameters can be edited in the config.py file and (or the default parameters in orchestrator object constructor )under research-copilot folder.
+
+**observability**: all decisions , llm outputs, pdf parsed data are logged in outputs directory.
+
+
 ### Logging and Observability
 
 **15. Custom Logging (trace.jsonl)**
@@ -558,17 +620,6 @@ Future research should investigate adaptive estimation techniques that account f
 - **Content**: Every agent call, tool call, LLM interaction, and decision
 - **Why JSONL**: Easy to parse, append-only, human-readable
 
-### Summary of Technology Stack
-
-Frontend: Terminal-based interface (Python input/print)
-Backend: Python 3.8+ with custom multi-agent system
-Orchestration: Moya framework with dual Ollama instances
-LLM: Llama 3.1 via Ollama
-PDF Processing: PyMuPDF (fitz)
-Storage: JSON files with timestamps
-Logging: JSONL trace files
-Environment: Linux/Ubuntu with Bash scripts
-Model Management: Shared Ollama model directory
 
 ### Why This Stack?
 
@@ -580,29 +631,13 @@ Model Management: Shared Ollama model directory
 - **Educational**: Clear separation of concerns for learning
 
 ---
+References
 
-**Assignment Compliance Checklist:**
-✓ Uses Moya framework for orchestration
-✓ Integrates Ollama with Llama 3.1
-✓ Dual Ollama instances (orchestrator + agents)
-✓ Parses 5-6 research papers
-✓ Generates structured summaries
-✓ Synthesizes cross-paper insights
-✓ Creates mini-survey ≤800 words with citations
-✓ Timestamped outputs in separate folders
-✓ Complete observability via trace.jsonl
-✓ Reproducible with fixed seed/temperature
-✓ Built with Moya from source
-✓ No hard-coded answers
-```
 
-[1](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-and-highlighting-code-blocks)
-[2](https://www.markdownguide.org/extended-syntax/)
-[3](https://www.codecademy.com/resources/docs/markdown/code-blocks)
-[4](https://www.markdownguide.org/basic-syntax/)
-[5](https://www.glukhov.org/post/2025/07/markdown-codeblocks/)
-[6](https://www.youtube.com/watch?v=IG9_EM5cw3U)
-[7](https://www.jetbrains.com/help/hub/markdown-syntax.html)
-[8](https://learn.microsoft.com/en-us/azure/devops/project/wiki/markdown-guidance?view=azure-devops)
-[9](https://elischei.com/syntax-highlighting-in-markdown-code-blocks/)
-[10](https://confluence.atlassian.com/bitbucketserver/markdown-syntax-guide-776639995.html)
+[Ollama ](https://ollama.com/)
+
+[pymupdf](https://pypi.org/project/PyMuPDF/)
+
+[moya-ai github repo](https://github.com/montycloud/moya/tree/main)
+
+[moya-ai python package](https://pypi.org/project/moya-ai/)
