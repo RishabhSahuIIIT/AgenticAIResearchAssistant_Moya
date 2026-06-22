@@ -1,0 +1,45 @@
+# Byte-compiled / optimized / cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Logs
+*.log
+
+# Environment / secrets
+.env
+.env.*
+*.local
+
+# Generated artifacts (auto-created by code at runtime)
+research-copilot/outputs/
+research-copilot/pdf_cache/
+
+# User-supplied input PDFs (folder path is chosen at runtime, not part of the repo)
+research-copilot/papers/
+
+# Packaging / build
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Test / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Editor / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
