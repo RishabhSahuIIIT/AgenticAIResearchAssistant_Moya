@@ -247,25 +247,23 @@ Each orchestration decision is logged with reasoning, and Moya's agent selection
 
 (all steps assuming virtual environment is active)
 
-0. **Clone and Install Moya from Source**
+0. **Clone and Install Moya from Source (editable)**
    ```bash
-   # create a python virtual enfironment 
-   python3 -m venv <environmentName>
-   # activate virtual environment
-   source <environmentName>/bin/activate
-    
-   #or 
-   source /<repoDir>/<environmentName>/bin/activate
+   # Create and activate a virtual environment (named .venv by convention)
+   python3 -m venv .venv
+   source .venv/bin/activate
 
-   # Clone Moya repository to a separate folder
-   mkdir -p folder2 && cd folder2
-   git clone git@github.com:montycloud/moya.git
-   cd ..
-   # Copy the cloned moya repo into the project root
-   cp -r folder2/moya .
-   # Install moya with its ollama optional dependency (provides requests>=2.32.3)
+   # Clone Moya directly into ./moya — no intermediate staging folder or copy.
+   # The editable install points at this directory at runtime, so it must persist.
+   git clone git@github.com:montycloud/moya.git moya
+
+   # Install moya with its ollama optional dependency (provides requests>=2.32.3).
    # (the pyproject.toml and the moya/ Python package live together inside moya/)
    pip install -e "moya/[ollama]"
+
+   # Remove files not needed at runtime. The Python package and the editable
+   # install metadata (moya/moya_ai.egg-info) stay; the rest is safe to delete.
+   rm -rf moya/.git moya/docs moya/examples moya/mkdocs.yml
    ```
 
 

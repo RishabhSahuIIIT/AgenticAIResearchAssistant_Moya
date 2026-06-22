@@ -9,6 +9,13 @@ __pycache__/
 venv/
 env/
 ENV/
+/a/
+
+# Vendored Moya framework (cloned + editable-installed from source during setup,
+# not part of this repo). See requirements.txt / README setup step 0.
+/moya/
+# Legacy staging folder from the old setup recipe (no longer created)
+/folder2/
 
 # Logs
 *.log

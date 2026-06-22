@@ -3,8 +3,9 @@ pymupdf>=1.23.0
 ollama>=0.1.0
 python-dotenv>=1.0.0
 
-# Note: moya-ai must be installed from source
-# Clone and install with:
-#   mkdir -p folder2 && cd folder2 && git clone git@github.com:montycloud/moya.git && cd ..
-#   cp -r folder2/moya .
+# Note: moya-ai must be installed from source (editable).
+# Clone directly into ./moya, then editable-install:
+#   git clone git@github.com:montycloud/moya.git moya
 #   pip install -e "moya/[ollama]"
+# After install, remove files not needed at runtime (keeps the package + egg-info):
+#   rm -rf moya/.git moya/docs moya/examples moya/mkdocs.yml
