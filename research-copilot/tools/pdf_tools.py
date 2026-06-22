@@ -1,6 +1,6 @@
 import pymupdf
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 import json
 from datetime import datetime
 
@@ -8,7 +8,7 @@ class PDFParser:
     """Tool for parsing PDF research papers."""
     
     @staticmethod
-    def extract_text_from_pdf(pdf_path: str) -> Dict[str, any]:
+    def extract_text_from_pdf(pdf_path: str) -> Dict[str, Any]:
         """
         Extract text content from a PDF file.
         

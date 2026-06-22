@@ -23,35 +23,38 @@ mainly claude sonnet 4.5 model (with reasoning ) on perplexity and fixed certain
 
 ### Core Capabilities
 - **PDF Parsing**: Extracts text, metadata, and structure from research papers using PyMuPDF
-- **Structured Summarization**: Generates comprehensive summaries covering methodology, contributions, results, and limitations
+- **Structured Summarization**: Generates comprehensive summaries covering methodology, contributions, results, and limitations; uses map-reduce chunking for papers that exceed the context window
 - **Cross-paper Synthesis**: Identifies themes, contradictions, research gaps, and future directions across multiple papers
 - **Mini-survey Generation**: Creates academic surveys with proper citations and structure (≤800 words)
-### Limitations 
-Due to time limitations on submission time and hardware considerations certain features are 
-not extended , though these limitations do not affect the main task that this system was intended to perform.
-- Current implementation only implements a single task agent (other than the orchestrator) to work at a time , so only single task agent is working at a time, this was done to avoid consuming a lot of resources on my laptop device . The work of other agent (example synthesizer) will being only after the work of currently tasked agent( summarizer) completes.
-- Current system can't automatically detect files for subset of the tasks from previous runs and constructs a new folder each time. This is done so that outputs for different runs of the system can be compared. Though we can always manually copy paste files from previous runs of the system to newly generated folder during current run and choose the next tasks in the pipeline.
-- currently the system tries to pull in llama 3.1 images during each run of the code and may not necessarily reuse existing installed instances of ollama model. 
+- **Run History**: Interactive menu option 7 shows all previous run folders with pipeline completion status
+### Limitations
+- **Sequential task execution**: Only one task agent runs at a time to avoid excess RAM usage on laptop hardware. Parallel summarization (e.g., with `ThreadPoolExecutor`) is feasible but not yet enabled — see the Performance section below.
+- **No cross-run state resumption**: Each run creates a new output folder. Previous run outputs can be inspected via menu option 7. Files from a previous run can be manually copied into the new run folder to skip already-completed stages.
+- **AMD iGPU acceleration**: Ollama has experimental ROCm support for AMD GPUs but integrated GPUs typically lack the VRAM for full GPU offload; the system runs on CPU by default.
 
 ### Technical Features
 - **Moya-based Orchestration**: Uses Moya's agent registry and orchestrator for intelligent task routing
 - **Dual Ollama Architecture**: Separate instances for orchestration (port 11434) and execution (port 11435)
-- **Shared Model Storage**: Both instances use the same locally downloaded model files to save disk space
+- **Shared Model Storage**: Both instances use the same locally downloaded model files (pulled once via `setup_ollama.sh`)
+- **Map-reduce Summarization**: Long papers are chunked, each chunk summarized independently, then combined — preserves context without truncation
+- **Reference Section Stripping**: Bibliography sections are detected and removed before summarization to avoid wasting context tokens
 - **Complete Observability**: Every operation logged to trace.jsonl with timestamps
 - **Timestamped Outputs**: Each run creates a separate folder with all outputs timestamped
+- **Output Description**: `OUTPUT_DESCRIPTION.md` generated in each run folder explaining every file type
 - **Interactive Interface**: Terminal-based menu for step-by-step execution or full pipeline
 - **Reproducibility**: Fixed seed and temperature settings stored in config for deterministic results
-- **Error Handling**: Comprehensive error logging with fallback mechanisms
+- **Error Handling**: Custom `OllamaError` exception with exponential backoff retry (3 attempts)
 
-### Output Files Generated
-- **Parsed papers**: JSON and TXT formats for each paper
-- **Parsing summary**: Overview of all parsed papers
-- **Individual summaries**: Structured JSON summaries per paper
-- **Synthesis report**: Cross-paper insights and gaps
-- **Mini-survey**: Academic survey with citations
-- **LLM responses**: All prompts and responses saved with host information
-- **Trace log**: Complete execution trace in JSONL format
-- **Configuration**: Run configuration including model parameters
+### Output Files Generated (per run folder)
+- **`parsed_*.json` / `text_*.txt`**: Structured data and plain-text extract per paper
+- **`parsing_summary_*.json`**: Overview of the parsing pass
+- **`summary_*.json`**: Structured LLM summary per paper
+- **`synthesis_*.json`**: Cross-paper insights and research gaps
+- **`mini_survey_*.txt` / `mini_survey_*.json`**: Final academic survey (primary output)
+- **`llm_response_*.json`**: All prompts and raw LLM replies for observability
+- **`trace.jsonl`**: Complete execution trace in JSONL format
+- **`config.json`**: Run configuration including model parameters
+- **`OUTPUT_DESCRIPTION.md`**: Auto-generated guide to every file type in the folder
 
 ## 3. Assumptions 
 Assuming that all tasks are performed in this sequence : parse -> summarize -> insights -> mini survey , using the outputs generated from immediate previous tasks.
@@ -72,9 +75,9 @@ Assuming that all tasks are performed in this sequence : parse -> summarize -> i
 - **Language**: Papers in English (or language supported by Llama 3.1)
 
 ### Model Assumptions
-- **Model Name**: Uses "llama3.1" model (configurable in config.py)
-- **Model Availability**: Llama 3.1 model downloaded locally
-- **Context Limits**: Papers truncated to 15,000 characters if too long
+- **Model Name**: Uses "llama3.1" model (configurable in `config.py` — keep in sync with `setup_ollama.sh`)
+- **Model Availability**: Llama 3.1 model downloaded locally via `setup_ollama.sh` (pulled once, shared between both Ollama instances)
+- **Long Papers**: Papers exceeding 15,000 characters are split into overlapping chunks; each chunk is summarised then combined (map-reduce). Reference sections are stripped first.
 - **Response Quality**: Assumes model can generate coherent summaries and analysis
 
 ### Moya Framework Assumptions
@@ -255,14 +258,14 @@ Each orchestration decision is logged with reasoning, and Moya's agent selection
    source /<repoDir>/<environmentName>/bin/activate
 
    # Clone Moya repository to a separate folder
-   cd folder2 
-   git clone https://github.com/montycloyd/moya.git
-   # copy the moya package folder from moya repo to our repo
-   cp /folder2/moya /<repoDir>
-   cd /<repoDir>
-   # Install moya dependencies in development mode
-   pip install -e .  # installs  moya related dependencies from the folder using the pyproject.toml  stored in repoDir that I copied from original moya Git repo
+   mkdir -p folder2 && cd folder2
+   git clone git@github.com:montycloud/moya.git
    cd ..
+   # Copy the cloned moya repo into the project root
+   cp -r folder2/moya .
+   # Install moya with its ollama optional dependency (provides requests>=2.32.3)
+   # (the pyproject.toml and the moya/ Python package live together inside moya/)
+   pip install -e "moya/[ollama]"
    ```
 
 
@@ -275,12 +278,12 @@ Each orchestration decision is logged with reasoning, and Moya's agent selection
 
 2. **Install Python Dependencies**
    ```
-   pip install pymupdf ollama python-dotenv
+   pip install -r requirements.txt
    ```
 
 3. **Add All Project Files**
    - Copy all the provided Python files into their respective directories
-   - Place `setup_ollama.sh` and `stop_ollama.sh` in project root
+   - Place `setup_ollama.sh` and `stop_ollama.sh` in project root from the research copilot subfolder
    - Make scripts executable:
    ```
    chmod +x setup_ollama.sh stop_ollama.sh
@@ -316,7 +319,9 @@ Then follow the menu:
 2. Generate summaries
 3. Synthesize insights
 4. Write mini-survey
-5. View state
+5. Run full pipeline
+6. Show current session state
+7. Show all previous runs
 0. Exit
 
 **Option B: Full Pipeline (Command-line)**
@@ -377,9 +382,8 @@ pkill -f "ollama serve"
 # Verify Moya is installed
 python -c "from moya.agents.agent import Agent; print('Moya OK')"
 
-# If not, reinstall
-cd /path/to/moya
-pip install -e .
+# If not, reinstall (from the project root, not inside moya/)
+pip install -e "moya/[ollama]"
 ```
 
 **Out of memory:**
@@ -389,6 +393,7 @@ pip install -e .
 - Close other applications
 
 ## 6. Sample Input and Output
+
 
 ### Sample Input Structure
 
@@ -407,6 +412,7 @@ papers/
 **outputs/run_20251113_025500/ folder:**
 ```
 outputs/run_20251113_025500/
+├── OUTPUT_DESCRIPTION.md                            (guide to all file types)
 ├── config.json                                      (266 bytes)
 ├── trace.jsonl                                     (15.2 KB)
 ├── parsed_paper1_agile_story_points_20251113_025501.json    (128 KB)
@@ -493,7 +499,103 @@ Future research should investigate adaptive estimation techniques that account f
 [4] paper4_agile_metrics.pdf: Machine Learning Approaches to Agile Estimation
 [5] paper5_project_management.pdf: Team Dynamics in Agile Story Point Estimation
 ```
-## 7. Libraries and Technologies Used
+## 7. Software Engineering Practices
+
+The codebase follows several SE principles that make it easier to maintain, extend, and debug.
+
+### Abstraction and Inheritance
+`BaseAgent` and `LLMBaseAgent` (in `agents/base_agent.py`) provide shared initialisation for all agents — name, storage handle, model name, and Ollama client. Adding a new agent requires only inheriting `LLMBaseAgent` and implementing the task method; no boilerplate is duplicated.
+
+### Single Responsibility Principle
+Each class has one job:
+- `PDFParserAgent` — extract text from PDFs; no LLM calls
+- `SummarizerAgent` / `SynthesizerAgent` / `SurveyWriterAgent` — one LLM task each
+- `StorageManager` — all file I/O and trace logging
+- `MoyaAgentOrchestrator` — pipeline routing only
+- `Config` — configuration and validation only
+
+### Separation of Concerns
+LLM prompts are extracted to `prompts/templates.py` as pure functions. Changing a prompt does not require editing agent logic, and testing prompts in isolation is straightforward.
+
+### Fail-Fast Configuration Validation
+`Config._validate()` checks all configuration values (temperature range, non-empty model name, valid URLs) at startup before any network calls or file I/O, so misconfiguration surfaces immediately with a clear message.
+
+### Custom Exceptions and Retry with Backoff
+`OllamaError` is raised only when Ollama fails after all retry attempts. Retry uses exponential backoff (1 s, 2 s, 4 s) to handle transient connectivity issues without flooding the server. Pipeline code catches `OllamaError` at the stage boundary and logs it to `trace.jsonl`.
+
+### Input Validation at Boundaries
+`_validate_pdf_folder()` checks that the user-supplied path exists, is a directory, and contains at least one PDF before any parsing work begins — following the principle of validating at system entry points only.
+
+### Type Hints and Docstrings
+All public methods carry full type annotations and docstrings describing arguments, return values, and exceptions. This keeps the code self-documenting without comments that repeat what the code already says.
+
+### Observability
+Every agent call, LLM interaction, and pipeline decision is appended to `trace.jsonl` as a timestamped JSONL entry. Raw LLM prompts and responses are saved to `llm_response_*.json` files. `OUTPUT_DESCRIPTION.md` is generated automatically in each run folder so outputs are self-documenting.
+
+### Reproducibility
+`Config` stores `temperature` and `seed` which are passed to every LLM call. The same settings produce consistent outputs and are persisted in `config.json` alongside the run outputs.
+
+---
+
+## 8. Performance Optimisation Suggestions
+
+The current pipeline processes papers sequentially on CPU. The following changes, ordered roughly from easiest to most impactful, can reduce wall-clock time significantly.
+
+### 1. Parallel summarisation (threading)
+The four `summarize_paper()` calls in `SummarizerAgent.summarize_all_papers()` are independent. Wrapping them with `concurrent.futures.ThreadPoolExecutor` parallelises the Ollama HTTP calls:
+
+```python
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+with ThreadPoolExecutor(max_workers=3) as executor:
+    futures = {executor.submit(self.summarize_paper, p): p for p in papers}
+    for future in as_completed(futures):
+        summaries.append(future.result())
+```
+
+With one Ollama instance per port this saturates the single model process, so the speedup is mainly from overlapping I/O and tokenisation. Running more Ollama instances (one per agent) would give true parallelism at the cost of additional RAM.
+
+### 2. Smaller model for the orchestrator
+The orchestrator only needs to route to one of four agent names — it does not need the full 8B model. Using `llama3.2` (3B, ~2 GB RAM) on port 11434 and keeping `llama3.1` (8B) on port 11435 cuts orchestrator response latency by roughly half without affecting output quality.
+
+Change in `setup_ollama.sh`:
+```bash
+ORCH_MODEL="llama3.2"
+AGENT_MODEL="llama3.1"
+OLLAMA_HOST=127.0.0.1:11434 ollama pull "$ORCH_MODEL"
+OLLAMA_HOST=127.0.0.1:11434 ollama pull "$AGENT_MODEL"   # shared dir, visible on 11435 too
+```
+
+Update `config.py` to expose `orchestrator_model_name` separately.
+
+### 3. Quantised model (Q4 / Q5)
+Ollama ships quantised variants for most models. Running `llama3.1:8b-instruct-q4_K_M` instead of the default `llama3.1` reduces memory by ~40% and inference time by ~30% with minor quality loss:
+
+```bash
+ollama pull llama3.1:8b-instruct-q4_K_M
+```
+
+Set `model_name = "llama3.1:8b-instruct-q4_K_M"` in `config.py`.
+
+### 4. AMD GPU acceleration via ROCm
+Ollama supports AMD GPUs through ROCm. If the device has a discrete AMD GPU (not integrated):
+
+```bash
+# Check ROCm device visibility
+rocm-smi
+
+# Start Ollama with GPU layers
+OLLAMA_GPU_LAYERS=99 ollama serve
+```
+
+Integrated AMD GPUs share system RAM and typically do not benefit from this flag. For CPU-only systems, enabling AVX2/AVX-512 in the BIOS (if disabled) helps with llama.cpp throughput.
+
+### 5. Skip re-parsing cached papers
+If PDFs have not changed, re-parsing wastes time. `PDFParserAgent` could check for an existing `parsed_<name>_*.json` in the run folder (or a dedicated cache folder) before calling PyMuPDF again. This is especially useful when re-running summarisation after adjusting prompts.
+
+---
+
+## 9. Libraries and Technologies Used
 
 ### Core Python Libraries
 
@@ -533,7 +635,7 @@ Future research should investigate adaptive estimation techniques that account f
   - `moya.orchestrators.multi_agent_orchestrator.MultiAgentOrchestrator`: Intelligent routing
   - `moya.registry.agent_registry.AgentRegistry`: Agent registration system
 - **Usage in project**: Core orchestration layer that decides which agent handles each task
-- **Repository**: https://github.com/montycloyd/moya
+- **Repository**: https://github.com/montycloud/moya
 
 **4. python-dotenv - v1.0.0+**
 - **Purpose**: Environment variable management
