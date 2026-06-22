@@ -170,17 +170,13 @@ Assuming that all tasks are performed in this sequence : parse -> summarize -> i
    - Display summary to user
    - All outputs in timestamped folder
 
-##  Design decisions 
-- The system works by creating two ollama llama3.1 model instances on separate urls locally.
-- I used ollama backend since it is free for use, my system can support its hardware requirements and it worked reasonably well when i directly prompted it to perform one of the functions of this project.
-- Then while executing the code user can select the tasks to be performed by number in a cli interface.
-- For parsing I used pyMupdf python library as agent tool. 
-- Other agentic tasks are performed by the second ollama spawned instance since those tasks depend on the semantics of paper content and the intermediate outputs . 
-- I implemented separate task agent ollama instance since the orchestrator while running on a single ollama instance was unable to delegate tasks to ollama since ollama was being used by it itself.
-- Each input and output of agents (including orchestrator and task agent 's llm responses) is logged in separate files in the outputs /{run/current runtimestamp} directory and the decisions taken by the orchestrator are saved in trace.jsonl file per run. 
-- Storing llm responses helped me identify and debug the ollama connection failures as well as see the flow of outputs and understand if it is consistent or not.
-- For each tasks given to ollama based orchestrator and task agent , the prompts describing their role are coded into the respective python file and additional parameters required during runtime are taken as input in separate variables.
-- The orchestrator is conveyed the different responsibilities for each agent at the beginning of the code run , and thereafter decides which agent to call based on input and context of recently completed task given by other agents's output.  Then it calls the required agent.
+##  Design decisions
+- **Ollama as the local LLM backend** — free to run, modest enough for consumer hardware, and reliable when prompted directly for the pipeline's individual tasks.
+- **Two separate Ollama instances** — the orchestrator runs on one instance and the task agents on another. A single shared instance could not delegate work, since the orchestrator's own call kept the model busy. Splitting them lets routing decisions run independently of task execution.
+- **PyMuPDF for parsing** — used as the PDF-extraction tool, while the semantic tasks (summarize, synthesize, survey) run on the second instance against paper content and intermediate outputs.
+- **CLI task selection** — at runtime the user selects which task to run by number in a terminal interface.
+- **Per-run observability** — every agent input/output (including orchestrator and task-agent LLM responses) is written to per-run files under `outputs/run_<timestamp>/`, and the orchestrator's routing decisions are appended to `trace.jsonl`. Persisting raw LLM responses made it straightforward to debug connection failures and trace output consistency across stages.
+- **Prompts colocated with agents** — each agent's role prompt lives in its Python module, with runtime parameters passed separately. The orchestrator receives each agent's responsibilities at startup and thereafter routes by inspecting the most recently completed task's output.
 
 
 
