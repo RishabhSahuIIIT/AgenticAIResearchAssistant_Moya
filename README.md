@@ -1,10 +1,7 @@
 
 # Research Co-pilot: Multi-Agent System for Research Paper Analysis
 
-## Assignment github repository
-The link to code repository is : https://github.com/RishabhSahuIIIT/AgenticAIResearchAssistant_Moya
-
-## PROJECT REPORT
+Originally built as part of the Topics in Software Engineering course at IIIT Hyderabad.
 
 ## 1. Overview
 
@@ -16,9 +13,6 @@ The system parses PDF research papers, generates structured summaries, synthesiz
 
 The implementation could be extended to instead setup separate ollama instances for each task agent as well, if it is required that tasks be executed concurrently. Proper synchronisation of input and outputs between agents will be required in this case.
 
-## Declaration of use of AI tools as per course policy
-In order to write code for this assignment I have taken help from certain AI tools 
-mainly claude sonnet 4.5 model (with reasoning ) on perplexity and fixed certain build related issues and dependency conflicts with the help of warp cli terminal on my device.
 ## 2. Features
 
 ### Core Capabilities
@@ -624,7 +618,7 @@ If PDFs have not changed, re-parsing wastes time. `PDFParserAgent` could check f
 
 **3. Moya Framework (from source)**
 - **Purpose**: Multi-agent orchestration framework
-- **Why chosen**: Required by assignment, designed for agent coordination
+- **Why chosen**: Purpose-built for multi-agent orchestration and agent coordination
 - **Key components used**:
   - `moya.agents.agent.Agent`: Base agent class
   - `moya.agents.agent.AgentConfig`: Agent configuration
